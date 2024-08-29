@@ -1,0 +1,122 @@
+services:
+
+  eureka-server:
+    build: eureka-server
+    mem_limit: 512m
+    ports:
+      - "8761:8761"
+    networks:
+      - 'tienda-network'
+      
+  config-server:
+    build: config-server
+    mem_limit: 512m
+    ports:
+      - "8085:8085"
+    networks:
+     - 'tienda-network'
+     
+  api-gateway:
+    build: api-gateway
+    mem_limit: 512m
+    ports:
+      - "443:443"
+    networks:
+     - 'tienda-network' 
+     
+  productos-service:
+    build: productos-service
+    mem_limit: 512m
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: jdbc:mysql://tienda_prod:3306/tienda_productos?createDatabaseIfNotEsxist=true&serverTimezone=UTC
+      DB_USER_NAME: root
+      DB_PASSWORD: 
+    restart: always
+    depends_on: 
+      tienda_prod:
+        condition: service_healthy
+    networks:
+     - 'tienda-network'
+  tienda_prod:
+    image: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 
+      MYSQL_PASSWORD: 
+      MYSQL_DATABASE:  tienda_productos
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+       
+       
+     
+     
+  carrito_service:
+    build: carrito_service
+    mem_limit: 512m
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:mysql://tienda_carr:3306/tienda_carrito?createDatabaseIfNotEsxist=true&serverTimezone=UTC
+      DB_USER_NAME: root
+      DB_PASSWORD: 
+    restart: always
+    depends_on: 
+      tienda_prod:
+        condition: service_healthy
+    networks:
+      - 'tienda-network'
+  tienda_carr:
+    image: mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 
+      MYSQL_PASSWORD: 
+      MYSQL_DATABASE:  tienda_carrito
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+   
+      
+     
+  venta_service:
+    build: venta_service
+    mem_limit: 512m
+    ports:
+      - "8082:8082"
+    environment:
+      DB_URL: jdbc:mysql://tienda_vent:3306/tienda_ventas?createDatabaseIfNotEsxist=true&serverTimezone=UTC
+      DB_USER_NAME: root
+      DB_PASSWORD: 
+    restart: always
+    depends_on: 
+      tienda_vent:
+        condition: service_healthy
+    networks:
+      - 'tienda-network'
+  tienda_vent:
+    image: mysql
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 
+      MYSQL_PASSWORD: 
+      MYSQL_DATABASE:  tienda_ventas
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+      
+    
+
+networks:
+  tienda-network:      
